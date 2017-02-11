@@ -44,7 +44,7 @@ const incomingMiddleware = bp => (event, next) => {
         }
       })
     } else {
-      var fn = new Function('bp', 'event', 'userId', 'platform', action)
+      let fn = new Function('bp', 'event', 'userId', 'platform', action)
       fn(bp, event, event.user.id, event.platform)
     }
   }
@@ -58,7 +58,7 @@ const incomingMiddleware = bp => (event, next) => {
     subscriptions.forEach(sub => {
       if (_.includes(sub.sub_keywords, event.text)) {
         exit = true
-        db(bp).subscribe(event.user.id, sub.category)
+        db(bp).subscribe(event.platform + ':' + event.user.id, sub.category)
         .then(() => {
           executeAction(sub.sub_action_type, sub.sub_action)
         })
@@ -67,7 +67,7 @@ const incomingMiddleware = bp => (event, next) => {
 
       if (_.includes(sub.unsub_keywords, event.text)) {
         exit = true
-        db(bp).unsubscribe(event.user.id, sub.category)
+        db(bp).unsubscribe(event.platform + ':' + event.user.id, sub.category)
         .then(() => {
           executeAction(sub.unsub_action_type, sub.unsub_action) 
         })
