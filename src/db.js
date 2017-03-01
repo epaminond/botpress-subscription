@@ -1,6 +1,8 @@
 import moment from 'moment'
 import _ from 'lodash'
 
+import { DatabaseHelpers as helpers } from 'botpress'
+
 const Validate = require('validate-arguments')
 
 module.exports = bp => {
@@ -45,7 +47,7 @@ module.exports = bp => {
 }
 
 function initialize(knex) {
-  return knex.schema.createTableIfNotExists('subscriptions', function (table) {
+  return helpers(knex).createTableIfNotExists('subscriptions', function (table) {
     table.increments('id').primary()
     table.timestamp('created_on')
     table.string('category')
@@ -57,14 +59,15 @@ function initialize(knex) {
     table.string('unsub_action_type')
   })
   .then(function() {
-    return knex.schema.createTableIfNotExists('subscription_users', function (table) {
-      table.string('subscriptionId').references('subscriptions.id')
+    return helpers(knex).createTableIfNotExists('subscription_users', function (table) {
+      table.integer('subscriptionId').references('subscriptions.id')
       table.string('userId').references('users.id')
       table.primary(['subscriptionId', 'userId'])
       table.timestamp('ts')
     })
   })
   .then(function() {
+    // Query compatible with SQLite3 & Postgres 9.5
     return knex.schema.raw(`create unique index
       if not exists "subscriptions_category_unique" 
       on "subscriptions" ("category")`)
@@ -84,7 +87,7 @@ function listAllSubscription(knex) {
   return knex('subscriptions')
   .leftJoin('subscription_users', 'subscription_users.subscriptionId', 'subscriptions.id')
   .groupBy('subscriptions.id')
-  .select(knex.raw(`subscriptions.*, count(userId) as count`))
+  .select(knex.raw(`subscriptions.*, count("userId") as count`))
   .then(mapSubscriptions)
 }
 
@@ -97,7 +100,7 @@ function create(knex, category) {
 
   return knex('subscriptions')
   .insert({
-    created_on: moment().format('x'),
+    created_on: helpers(knex).date.now(),
     category: category,
     sub_keywords: JSON.stringify(['SUBSCRIBE_' + upper]),
     unsub_keywords: JSON.stringify(['UNSUBSCRIBE_' + upper]),
@@ -142,12 +145,12 @@ function subscribe(knex, userId, category) {
     if (!sub) {
       throw new Error('Could not find subscription of category: ' + category)
     }
-
+    
     return knex('subscription_users')
     .insert({
       subscriptionId: sub.id,
       userId: userId,
-      ts: moment().format('x')
+      ts: helpers(knex).date.now()
     })
   })
 }

@@ -1,30 +1,16 @@
+import checkVersion from 'botpress-version-manager'
+
 import path from 'path'
 import fs from 'fs'
 import _ from 'lodash'
 
 import db from './db'
 
-const loadConfigFromFile = filePath => {
-  if (!fs.existsSync(filePath)) {
-    const config = {
-      manage_keywords: ['MANAGE_SUBSCRIPTIONS'],
-      manage_action : 'To unsubscribe, type: UNSUBSCRIBE_<CATEGORY>. Categories are: {{categories}}',
-      manage_type : 'text'
-    }
-    saveConfigToFile(config, filePath)
-  }
-
-  return JSON.parse(fs.readFileSync(filePath))
-}
-
-var saveConfigToFile = (config, filePath) => {
-  fs.writeFileSync(filePath, JSON.stringify(config))
-}
-
 let subscriptions = null
-let config = null
+let cached_config = null
+
 const incomingMiddleware = bp => (event, next) => {
-  if (!subscriptions || !config) { 
+  if (!subscriptions || !cached_config) { 
     return next()
   }
 
@@ -44,13 +30,13 @@ const incomingMiddleware = bp => (event, next) => {
         }
       })
     } else {
-      var fn = new Function('bp', 'event', 'userId', 'platform', action)
+      let fn = new Function('bp', 'event', 'userId', 'platform', action)
       fn(bp, event, event.user.id, event.platform)
     }
   }
 
-  if (config && _.includes(config.manage_keywords, event.text)) {
-    return executeAction(config.manage_type, config.manage_action)
+  if (cached_config && _.includes(cached_config.manage_keywords, event.text)) {
+    return executeAction(cached_config.manage_type, cached_config.manage_action)
   }
 
   if (subscriptions) {
@@ -58,7 +44,7 @@ const incomingMiddleware = bp => (event, next) => {
     subscriptions.forEach(sub => {
       if (_.includes(sub.sub_keywords, event.text)) {
         exit = true
-        db(bp).subscribe(event.user.id, sub.category)
+        db(bp).subscribe(event.platform + ':' + event.user.id, sub.category)
         .then(() => {
           executeAction(sub.sub_action_type, sub.sub_action)
         })
@@ -67,7 +53,7 @@ const incomingMiddleware = bp => (event, next) => {
 
       if (_.includes(sub.unsub_keywords, event.text)) {
         exit = true
-        db(bp).unsubscribe(event.user.id, sub.category)
+        db(bp).unsubscribe(event.platform + ':' + event.user.id, sub.category)
         .then(() => {
           executeAction(sub.unsub_action_type, sub.unsub_action) 
         })
@@ -83,7 +69,16 @@ const incomingMiddleware = bp => (event, next) => {
 }
 
 module.exports = {
-  init: function(bp) {
+
+  config: { 
+    manage_keywords: { type: 'any', required: true, default: ['MANAGE_SUBSCRIPTIONS'], validation: v => _.isArray(v) },
+    manage_action: { type: 'string', required: true, default: 'To unsubscribe, type: UNSUBSCRIBE_<CATEGORY>. Categories are: {{categories}}', },
+    manage_type: { type: 'choice', required:true, default: 'text', validation: ['text', 'javascript'] }
+  },
+
+  init: function(bp, config) {
+    checkVersion(bp, __dirname)
+
     bp.middlewares.register({
       name: 'manage.subscriptions',
       type: 'incoming',
@@ -103,11 +98,12 @@ module.exports = {
     db(bp).bootstrap()
     .then(db(bp).listAll)
     .then(subs => subscriptions = subs)
-  },
-  ready: function(bp) {
-    const configFile = path.join(bp.projectLocation, bp.botfile.modulesConfigDir, 'botpress-subscription.json')
-    config = loadConfigFromFile(configFile)
 
+    config.loadAll()
+    .then(c => cached_config = c)
+  },
+
+  ready: function(bp, config) {
     const router = bp.getRouter('botpress-subscription')
     
     const updateSubs = () => {
@@ -116,13 +112,18 @@ module.exports = {
     }
 
     router.get('/config', (req, res) => {
-      res.send(loadConfigFromFile(configFile))
+      config.loadAll()
+      .then(c => {
+        cached_config = c
+        res.send(cached_config)
+      })
     })
 
     router.post('/config', (req, res) => {
-      saveConfigToFile(req.body, configFile)
-      config = loadConfigFromFile(configFile)
-      res.sendStatus(200)
+      config.saveAll(req.body)
+      .then(() => config.loadAll())
+      .then(c => cached_config = c)
+      .then(() => res.sendStatus(200))
     })
 
     router.get('/subscriptions', (req, res) => {
