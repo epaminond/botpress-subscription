@@ -1,3 +1,5 @@
+import checkVersion from 'botpress-version-manager'
+
 import path from 'path'
 import fs from 'fs'
 import _ from 'lodash'
@@ -75,6 +77,8 @@ module.exports = {
   },
 
   init: function(bp, config) {
+    checkVersion(bp, __dirname)
+
     bp.middlewares.register({
       name: 'manage.subscriptions',
       type: 'incoming',

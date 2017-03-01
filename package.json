@@ -1,6 +1,6 @@
 {
   "name": "botpress-subscription",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Easily create and manage user subscriptions",
   "main": "bin/node.bundle.js",
   "homepage": "https://github.com/botpress/botpress-subscription",
@@ -8,6 +8,16 @@
     "menuText": "Subscription",
     "menuIcon": "subscriptions",
     "webBundle": "bin/web.bundle.js"
+  },
+  "keywords": [
+    "subscription",
+    "botpress"
+  ],
+  "version-manager": {
+    "warn": "Can't migrate existing database, please see https://gist.github.com/slvnperron/9a3027f4d798c7d6b6b6a9b9b6bdfa7b",
+    "botpress-check": ">= 0.1 < 1",
+    "botpress-update": "^0.x",
+    "module-downgrade": "~1.0.x"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -50,6 +60,7 @@
   },
   "dependencies": {
     "bluebird": "^3.4.6",
+    "botpress-version-manager": "^1.0.2",
     "lodash": "^4.17.2",
     "moment": "^2.17.1",
     "validate-arguments": "0.0.8"
