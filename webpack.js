@@ -13,6 +13,9 @@ var nodeConfig = {
   },
   externals: [nodeExternals(), 'botpress'],
   target: 'node',
+  node: {
+    __dirname: false
+  },
   resolve: {
     extensions: ['', '.js']
   },
