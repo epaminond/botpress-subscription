@@ -101,23 +101,27 @@ export default class SubscriptionModule extends React.Component {
     }
     const isToggled = config.manage_type === 'javascript'
 
-    return <Panel header="Configuration" footer={footer}>
-      <Form>
-        <FormGroup>
-          <ControlLabel>Manage keywords</ControlLabel>
-          <TagsInput value={config.manage_keywords} onChange={updateKeywords} />
-        </FormGroup>
-        <FormGroup>
-          <ControlLabel>Action type ({config.manage_type}) {' '}</ControlLabel>
-          <Toggle className={style.toggle}
-            defaultChecked={isToggled}
-            onChange={updateType} />
-        </FormGroup>
-        <FormGroup>
-          <ControlLabel>Subscribe action</ControlLabel>
-          <FormControl componentClass="textarea" value={config.manage_action} onChange={updateAction}/>
-        </FormGroup>
-      </Form>
+    return <Panel>
+      <Panel.Heading>Configuration</Panel.Heading>
+      <Panel.Body>
+        <Form>
+          <FormGroup>
+            <ControlLabel>Manage keywords</ControlLabel>
+            <TagsInput value={config.manage_keywords} onChange={updateKeywords} />
+          </FormGroup>
+          <FormGroup>
+            <ControlLabel>Action type ({config.manage_type}) {' '}</ControlLabel>
+            <Toggle className={style.toggle}
+              defaultChecked={isToggled}
+              onChange={updateType} />
+          </FormGroup>
+          <FormGroup>
+            <ControlLabel>Subscribe action</ControlLabel>
+            <FormControl componentClass="textarea" value={config.manage_action} onChange={updateAction}/>
+          </FormGroup>
+        </Form>
+      </Panel.Body>
+      <Panel.Footer>{footer}</Panel.Footer>
     </Panel>
   }
 
@@ -217,39 +221,43 @@ export default class SubscriptionModule extends React.Component {
 
     const collapsed = this.state.selected === sub.id
 
-    return <Panel collapsible={true} key={sub.id} header={header} footer={footer}>
-      <div>
-        <Form>
-          <FormGroup>
-            <ControlLabel>Subscribe keywords</ControlLabel>
-            <TagsInput value={sub.sub_keywords} onChange={hChange('sub_keywords')} />
-          </FormGroup>
-          <FormGroup>
-            <ControlLabel>Action type ({sub.sub_action_type}) {' '}</ControlLabel>
-            <Toggle className={style.toggle}
-              defaultChecked={isToggled('sub_action_type')}
-              onChange={hToggle('sub_action_type')} />
-          </FormGroup>
-          <FormGroup>
-            <ControlLabel>Subscribe action</ControlLabel>
-            <FormControl componentClass="textarea" value={sub.sub_action} onChange={hTextArea('sub_action')}/>
-          </FormGroup>
-          <FormGroup>
-            <ControlLabel>Unsubscribe keywords</ControlLabel>
-            <TagsInput value={sub.unsub_keywords} onChange={hChange('unsub_keywords')} />
-          </FormGroup>
-          <FormGroup>
-            <ControlLabel>Action type ({sub.unsub_action_type}) {' '}</ControlLabel>
-            <Toggle className={style.toggle}
-              defaultChecked={isToggled('unsub_action_type')}
-              onChange={hToggle('unsub_action_type')} />
-          </FormGroup>
-          <FormGroup>
-            <ControlLabel>Unsubscribe action</ControlLabel>
-            <FormControl componentClass="textarea" value={sub.unsub_action} onChange={hTextArea('unsub_action')}/>
-          </FormGroup>
-        </Form>
-      </div>
+    return <Panel collapsible={true} key={sub.id}>
+      <Panel.Heading>{header}</Panel.Heading>
+      <Panel.Body>
+        <div>
+          <Form>
+            <FormGroup>
+              <ControlLabel>Subscribe keywords</ControlLabel>
+              <TagsInput value={sub.sub_keywords} onChange={hChange('sub_keywords')} />
+            </FormGroup>
+            <FormGroup>
+              <ControlLabel>Action type ({sub.sub_action_type}) {' '}</ControlLabel>
+              <Toggle className={style.toggle}
+                defaultChecked={isToggled('sub_action_type')}
+                onChange={hToggle('sub_action_type')} />
+            </FormGroup>
+            <FormGroup>
+              <ControlLabel>Subscribe action</ControlLabel>
+              <FormControl componentClass="textarea" value={sub.sub_action} onChange={hTextArea('sub_action')}/>
+            </FormGroup>
+            <FormGroup>
+              <ControlLabel>Unsubscribe keywords</ControlLabel>
+              <TagsInput value={sub.unsub_keywords} onChange={hChange('unsub_keywords')} />
+            </FormGroup>
+            <FormGroup>
+              <ControlLabel>Action type ({sub.unsub_action_type}) {' '}</ControlLabel>
+              <Toggle className={style.toggle}
+                defaultChecked={isToggled('unsub_action_type')}
+                onChange={hToggle('unsub_action_type')} />
+            </FormGroup>
+            <FormGroup>
+              <ControlLabel>Unsubscribe action</ControlLabel>
+              <FormControl componentClass="textarea" value={sub.unsub_action} onChange={hTextArea('unsub_action')}/>
+            </FormGroup>
+          </Form>
+        </div>
+      </Panel.Body>
+      <Panel.Footer>{footer}</Panel.Footer>
     </Panel>
   }
 
@@ -268,8 +276,9 @@ export default class SubscriptionModule extends React.Component {
   }
 
   renderError() {
-    return <Panel header='Error' bsStyle='danger'>
-      {this.state.error}
+    return <Panel bsStyle='danger'>
+      <Panel.Heading>Error</Panel.Heading>
+      <Panel.Body>{this.state.error}</Panel.Body>
     </Panel>
   }
 
